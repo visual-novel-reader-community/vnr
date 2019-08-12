@@ -520,9 +520,28 @@ class NaverEngine(OnlineEngine):
 
   def createUrl(self, text, language, gender):
     """@reimp@"""
-    from naver import navertts
-    pitch = 100 + self.pitch * 10 # 100 by default
-    return navertts.url(text, language, pitch=pitch, gender=gender or self.gender)
+    # -Origin-
+    # from naver import navertts
+    # pitch = 100 + self.pitch * 10 # 100 by default
+    # return navertts.url(text, language, pitch=pitch, gender=gender or self.gender)
+    # -Fiexed-
+    import os, sys, json
+    import requests
+    import base64
+    ENCODE_BEGIN = b'\xaeU\xae\xa1C\x9b,Uzd\xf8\xef'
+    ENCODE_END   = b'"}'
+    params = 'pitch":{},"speaker":{},"speed":{},"text":"'.format(
+            0, 
+            "\"{}\"".format("yuri"),
+            0
+    ).encode('utf-8')
+    s = ENCODE_BEGIN + params + text.encode('utf-8') + ENCODE_END
+    encoded = base64.b64encode(s)
+    r = requests.post('https://papago.naver.com/apis/tts/makeID', {'data' : encoded })
+    res = r.content
+    tts_id = json.loads(res)['id']
+    audiourl = 'https://papago.naver.com/apis/tts/{}'.format(tts_id)
+    return audiourl
 
 class VoiceroidOnlineEngine(OnlineEngine):
   language = 'ja' # override
